@@ -388,7 +388,7 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
         except Exception as e:
             logger.warning(f"Vector search index may already exist or could not be created: {e}")
 
-    def _get_mongo_client(self, connection_string: str) -> "MongoClient":  # type: ignore[no-any-unimported]
+    def _get_mongo_client(self, connection_string: str) -> "MongoClient[dict[str, Any]]":  # type: ignore[no-any-unimported]
         """
         Establish a connection to MongoDB Atlas.
 
@@ -403,7 +403,7 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
         """
         logger.info("Attempting to connect to MongoDB Atlas.")
         try:
-            client = MongoClient(connection_string)
+            client: MongoClient[dict[str, Any]] = MongoClient(connection_string)  # type: ignore[no-any-unimported]
             logger.info("Connected to MongoDB Atlas.")
             return client
         except pymongo.errors.ConnectionFailure as e:
