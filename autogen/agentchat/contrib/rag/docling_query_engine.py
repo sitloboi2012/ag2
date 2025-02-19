@@ -5,9 +5,9 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, Optional
 
-from autogen.import_utils import optional_import_block, require_optional_import
+from ....import_utils import optional_import_block, require_optional_import
 
 with optional_import_block():
     import chromadb
@@ -31,7 +31,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-def load_documents(input_dir: Optional[str], input_docs: Optional[List[str]]) -> List[LlamaDocument]:  # type: ignore[no-any-unimported]
+@require_optional_import(["llama_index"], "rag")
+def load_documents(input_dir: Optional[str], input_docs: Optional[list[str]]) -> list["LlamaDocument"]:  # type: ignore[no-any-unimported]
     """
     Load documents from a directory and/or a list of file paths.
 
@@ -42,17 +43,17 @@ def load_documents(input_dir: Optional[str], input_docs: Optional[List[str]]) ->
 
     Args:
         input_dir (Optional[str]): Path to the directory containing documents.
-        input_docs (Optional[List[str]]): List of document file paths.
+        input_docs (Optional[list[str]]): List of document file paths.
 
     Returns:
-        List[LlamaDocument]: A list of loaded LlamaDocument objects.
+        list[LlamaDocument]: A list of loaded LlamaDocument objects.
 
     Raises:
         ValueError: If the input directory does not exist, if any document file does not exist,
                     or if neither input_dir nor input_docs is provided.
     """
     logger.info("Starting load_documents.")
-    documents: List[LlamaDocument] = []  # type: ignore[no-any-unimported]
+    documents: list[LlamaDocument] = []  # type: ignore[no-any-unimported]
     if input_dir:
         logger.info(f"Loading docs from directory: {input_dir}")
         if not os.path.exists(input_dir):
@@ -88,7 +89,8 @@ class BaseDoclingQueryEngine(ABC):
         get_collection_name: Abstract method to obtain the collection/index name.
     """
 
-    def __init__(self, llm: Optional[LLM] = None) -> None:  # type: ignore[no-any-unimported]
+    @require_optional_import(["llama_index"], "rag")
+    def __init__(self, llm: Optional["LLM"] = None) -> None:  # type: ignore[no-any-unimported]
         """
         Initialize the query engine with a specific language model.
 
@@ -96,13 +98,13 @@ class BaseDoclingQueryEngine(ABC):
             llm (Optional[LLM]): Optional language model to be used for querying. Defaults to OpenAI GPT-4.
         """
         self.llm: LLM = llm or OpenAI(model="gpt-4o", temperature=0.0)  # type: ignore[no-any-unimported]
-        self.index = None
+        self.index: Optional[VectorStoreIndex] = None  # type: ignore[no-any-unimported]
 
     @abstractmethod
     def init_db(
         self,
         input_dir: Optional[str] = None,
-        input_doc_paths: Optional[List[str]] = None,
+        input_doc_paths: Optional[list[str]] = None,
         collection_name: Optional[str] = None,
     ) -> None:
         """
@@ -114,13 +116,13 @@ class BaseDoclingQueryEngine(ABC):
 
         Args:
             input_dir (Optional[str]): Directory of input documents.
-            input_doc_paths (Optional[List[str]]): List of input document file paths.
+            input_doc_paths (Optional[list[str]]): List of input document file paths.
             collection_name (Optional[str]): Optional name of the collection/index.
 
         Raises:
             NotImplementedError: Must be implemented by subclasses.
         """
-        pass
+        ...
 
     @abstractmethod
     def query(self, question: str) -> str:
@@ -136,22 +138,22 @@ class BaseDoclingQueryEngine(ABC):
         Raises:
             ValueError: If the index is not initialized.
         """
-        pass
+        ...
 
     @abstractmethod
     def add_docs(
         self,
         new_doc_dir: Optional[str] = None,
-        new_doc_paths: Optional[List[str]] = None,
+        new_doc_paths: Optional[list[str]] = None,
     ) -> None:
         """
         Add additional documents to the existing index.
 
         Args:
             new_doc_dir (Optional[str]): Directory containing new documents.
-            new_doc_paths (Optional[List[str]]): List of new document file paths.
+            new_doc_paths (Optional[list[str]]): List of new document file paths.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_collection_name(self) -> Optional[str]:
@@ -161,7 +163,7 @@ class BaseDoclingQueryEngine(ABC):
         Returns:
             Optional[str]: The collection or index name, or None if not initialized.
         """
-        pass
+        ...
 
 
 @require_optional_import(["chromadb", "llama_index"], "rag")
@@ -189,10 +191,10 @@ class DoclingChromaMdQueryEngine(BaseDoclingQueryEngine):
     def __init__(  # type: ignore[no-any-unimported]
         self,
         db_path: Optional[str] = None,
-        embedding_function: Optional[EmbeddingFunction[Any]] = None,
+        embedding_function: Optional["EmbeddingFunction[Any]"] = None,
         metadata: Optional[dict[str, Any]] = None,
-        llm: Optional[LLM] = None,
-    ) -> None:  # type: ignore[no-any-unimported]
+        llm: Optional["LLM"] = None,
+    ) -> None:
         """
         Initialize the DoclingChromaMdQueryEngine.
 
@@ -204,7 +206,7 @@ class DoclingChromaMdQueryEngine(BaseDoclingQueryEngine):
         """
         logger.info("Initializing DoclingChromaMdQueryEngine.")
         super().__init__(llm=llm)
-        self.embedding_function: EmbeddingFunction[Any] = embedding_function or DefaultEmbeddingFunction()  # type: ignore[assignment]
+        self.embedding_function: EmbeddingFunction[Any] = embedding_function or DefaultEmbeddingFunction()  # type: ignore[assignment,no-any-unimported]
         self.metadata: dict[str, Any] = metadata or {
             "hnsw:space": "ip",
             "hnsw:construction_ef": 30,
@@ -212,14 +214,14 @@ class DoclingChromaMdQueryEngine(BaseDoclingQueryEngine):
         }
         self.client = chromadb.PersistentClient(path=db_path or "./chroma")
         self.collection_name: Optional[str] = None
-        self.collection: Optional[Collection] = None
-        self.vector_store = None
-        self.storage_context = None
+        self.collection: Optional[Collection] = None  # type: ignore[no-any-unimported]
+        self.vector_store: Optional[ChromaVectorStore] = None  # type: ignore[no-any-unimported]
+        self.storage_context: Optional[StorageContext] = None  # type: ignore[no-any-unimported]
 
     def init_db(
         self,
         input_dir: Optional[str] = None,
-        input_doc_paths: Optional[List[str]] = None,
+        input_doc_paths: Optional[list[str]] = None,
         collection_name: Optional[str] = None,
     ) -> None:
         """
@@ -227,7 +229,7 @@ class DoclingChromaMdQueryEngine(BaseDoclingQueryEngine):
 
         Args:
             input_dir (Optional[str]): Directory containing documents.
-            input_doc_paths (Optional[List[str]]): List of document file paths.
+            input_doc_paths (Optional[list[str]]): List of document file paths.
             collection_name (Optional[str]): Optional name for the Chromadb collection.
 
         Raises:
@@ -247,12 +249,12 @@ class DoclingChromaMdQueryEngine(BaseDoclingQueryEngine):
         self.index = self._create_index(documents)
         logger.info("Vector index created with input documents.")
 
-    def _create_index(self, docs: List[LlamaDocument]) -> VectorStoreIndex:  # type: ignore[no-any-unimported]
+    def _create_index(self, docs: list["LlamaDocument"]) -> "VectorStoreIndex":  # type: ignore[no-any-unimported]
         """
         Create a vector index from the provided documents.
 
         Args:
-            docs (List[LlamaDocument]): List of documents to index.
+            docs (list[LlamaDocument]): List of documents to index.
 
         Returns:
             VectorStoreIndex: The initialized vector index.
@@ -287,14 +289,14 @@ class DoclingChromaMdQueryEngine(BaseDoclingQueryEngine):
     def add_docs(
         self,
         new_doc_dir: Optional[str] = None,
-        new_doc_paths: Optional[List[str]] = None,
+        new_doc_paths: Optional[list[str]] = None,
     ) -> None:
         """
         Add additional documents to the existing vector index.
 
         Args:
             new_doc_dir (Optional[str]): Directory containing new documents.
-            new_doc_paths (Optional[List[str]]): List of new document file paths.
+            new_doc_paths (Optional[list[str]]): List of new document file paths.
 
         Raises:
             ValueError: If the vector index is not initialized.
@@ -339,11 +341,11 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
 
     def __init__(  # type: ignore[no-any-unimported]
         self,
-        connection_string: str = "mongodb+srv://<username>:<password>@<host>?retryWrites=true&w=majority",
-        database_name: str = "vector_db",
-        collection_name: str = DEFAULT_COLLECTION_NAME,
-        vector_index_name: str = "vector_index",
-        llm: Optional[LLM] = None,
+        connection_string: Optional[str] = None,
+        database_name: Optional[str] = None,
+        collection_name: Optional[str] = None,
+        vector_index_name: Optional[str] = None,
+        llm: Optional["LLM"] = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -358,6 +360,14 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
             **kwargs: Other optional parameters for configuration.
         """
         logger.info("Initializing DoclingMongoAtlasMdQueryEngine.")
+
+        connection_string = (
+            connection_string or "mongodb+srv://<username>:<password>@<host>?retryWrites=true&w=majority"
+        )
+        database_name = database_name or "vector_db"
+        collection_name = collection_name or DEFAULT_COLLECTION_NAME
+        vector_index_name = vector_index_name or "vector_index"
+
         super().__init__(llm=llm)
         self.client = self._get_mongo_client(connection_string)
         self.collection_name = collection_name
@@ -369,16 +379,16 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
             **kwargs,
         )
         self.vector_index_name = vector_index_name
-        self.vector_store = None
-        self.storage_context = None
-        self.index = None
+        # self.vector_store = None  # not used
+        self.storage_context: Optional["StorageContext"] = None  # type: ignore[no-any-unimported]
+        self.index: Optional["VectorStoreIndex"] = None  # type: ignore[no-any-unimported]
         try:
             self.collection.create_vector_search_index(dimensions=1536, path="embedding", similarity="cosine")
             logger.info("MongoDB Atlas vector search index created.")
         except Exception as e:
             logger.warning(f"Vector search index may already exist or could not be created: {e}")
 
-    def _get_mongo_client(self, connection_string: str) -> MongoClient:  # type: ignore[no-any-unimported]
+    def _get_mongo_client(self, connection_string: str) -> "MongoClient":  # type: ignore[no-any-unimported]
         """
         Establish a connection to MongoDB Atlas.
 
@@ -403,7 +413,7 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
     def init_db(
         self,
         input_dir: Optional[str] = None,
-        input_doc_paths: Optional[List[str]] = None,
+        input_doc_paths: Optional[list[str]] = None,
         collection_name: Optional[str] = None,
     ) -> None:
         """
@@ -411,26 +421,28 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
 
         Args:
             input_dir (Optional[str]): Directory containing documents.
-            input_doc_paths (Optional[List[str]]): List of document file paths.
+            input_doc_paths (Optional[list[str]]): List of document file paths.
             collection_name (Optional[str]): Optional new collection name.
 
         Raises:
             ValueError: If the documents cannot be loaded.
         """
         logger.info("Initializing database for DoclingMongoAtlasMdQueryEngine.")
+
         if collection_name:
             self.collection_name = collection_name
+
         documents = load_documents(input_dir, input_doc_paths)
         logger.info(f"Documents loaded successfully. Total docs loaded: {len(documents)}")
         self.index = self._create_index(documents)
         logger.info("Vector index created with input documents.")
 
-    def _create_index(self, docs: List[LlamaDocument]) -> VectorStoreIndex:  # type: ignore[no-any-unimported]
+    def _create_index(self, docs: list["LlamaDocument"]) -> "VectorStoreIndex":  # type: ignore[no-any-unimported]
         """
         Create a vector index from documents using MongoDB Atlas.
 
         Args:
-            docs (List[LlamaDocument]): List of documents to index.
+            docs (list[LlamaDocument]): List of documents to index.
 
         Returns:
             VectorStoreIndex: The initialized vector index.
@@ -466,14 +478,14 @@ class DoclingMongoAtlasMdQueryEngine(BaseDoclingQueryEngine):
     def add_docs(
         self,
         new_doc_dir: Optional[str] = None,
-        new_doc_paths: Optional[List[str]] = None,
+        new_doc_paths: Optional[list[str]] = None,
     ) -> None:
         """
         Add additional documents to the MongoDB Atlas index.
 
         Args:
             new_doc_dir (Optional[str]): Directory containing new documents.
-            new_doc_paths (Optional[List[str]]): List of new document file paths.
+            new_doc_paths (Optional[list[str]]): List of new document file paths.
 
         Raises:
             ValueError: If the vector index is not initialized.
