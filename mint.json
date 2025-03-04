@@ -128,13 +128,15 @@
             {
               "group": "Tools",
               "pages": [
-                "docs/user-guide/basic-concepts/tools/tools",
+                "docs/user-guide/basic-concepts/tools/index",
+                "docs/user-guide/basic-concepts/tools/basics",
+                "docs/user-guide/basic-concepts/tools/tools-with-secrets",
                 {
-                  "group": "Experimental",
+                  "group": "Interoperability",
                   "pages": [
-                    "docs/user-guide/basic-concepts/tools/experimental/browser-use",
-                    "docs/user-guide/basic-concepts/tools/experimental/crawl4ai",
-                    "docs/user-guide/basic-concepts/tools/experimental/deep-research"
+                    "docs/user-guide/basic-concepts/tools/interop/langchain",
+                    "docs/user-guide/basic-concepts/tools/interop/crewai",
+                    "docs/user-guide/basic-concepts/tools/interop/pydanticai"
                   ]
                 }
               ]
@@ -162,16 +164,7 @@
                 "docs/user-guide/advanced-concepts/swarm/use-case"
               ]
             },
-            {
-              "group": "Interoperability",
-              "pages": [
-                "docs/user-guide/advanced-concepts/interop/langchain",
-                "docs/user-guide/advanced-concepts/interop/crewai",
-                "docs/user-guide/advanced-concepts/interop/pydanticai"
-              ]
-            },
             "docs/user-guide/advanced-concepts/code-execution",
-            "docs/user-guide/advanced-concepts/tools-with-secrets",
             "docs/user-guide/advanced-concepts/conversation-patterns-deep-dive",
             "docs/user-guide/advanced-concepts/llm-configuration-deep-dive"
           ]
@@ -212,7 +205,17 @@
             "docs/user-guide/reference-agents/communication-agents",
             "docs/user-guide/reference-agents/docagent",
             "docs/user-guide/reference-agents/reasoningagent",
-            "docs/user-guide/reference-agents/websurferagent"
+            "docs/user-guide/reference-agents/websurferagent",
+            "docs/user-guide/reference-agents/deepresearchagent"
+          ]
+        },
+        {
+          "group": "Reference Tools",
+          "pages": [
+            "docs/user-guide/reference-tools/index",
+            "docs/user-guide/reference-tools/browser-use",
+            "docs/user-guide/reference-tools/crawl4ai",
+            "docs/user-guide/reference-tools/deep-research"
           ]
         }
       ]
@@ -420,11 +423,9 @@
             "docs/api-reference/autogen/ON_CONDITION",
             "docs/api-reference/autogen/OnCondition",
             "docs/api-reference/autogen/OpenAIWrapper",
-            "docs/api-reference/autogen/ReasoningAgent",
             "docs/api-reference/autogen/SenderRequiredError",
             "docs/api-reference/autogen/SwarmAgent",
             "docs/api-reference/autogen/SwarmResult",
-            "docs/api-reference/autogen/ThinkNode",
             "docs/api-reference/autogen/UPDATE_SYSTEM_MESSAGE",
             "docs/api-reference/autogen/UndefinedNextAgentError",
             "docs/api-reference/autogen/UpdateSystemMessage",
@@ -442,7 +443,6 @@
             "docs/api-reference/autogen/initiate_swarm_chat",
             "docs/api-reference/autogen/register_function",
             "docs/api-reference/autogen/register_hand_off",
-            "docs/api-reference/autogen/visualize_tree",
             {
               "group": "agentchat",
               "pages": [
@@ -1025,15 +1025,14 @@
                       "group": "rag",
                       "pages": [
                         "docs/api-reference/autogen/agentchat/contrib/rag/overview",
-                        "docs/api-reference/autogen/agentchat/contrib/rag/RAGQueryEngine"
-                      ]
-                    },
-                    {
-                      "group": "reasoning_agent",
-                      "pages": [
-                        "docs/api-reference/autogen/agentchat/contrib/reasoning_agent/overview",
-                        "docs/api-reference/autogen/agentchat/contrib/reasoning_agent/extract_rlhf_preference_dataset",
-                        "docs/api-reference/autogen/agentchat/contrib/reasoning_agent/extract_sft_dataset"
+                        "docs/api-reference/autogen/agentchat/contrib/rag/RAGQueryEngine",
+                        {
+                          "group": "chroma_db_query_engine",
+                          "pages": [
+                            "docs/api-reference/autogen/agentchat/contrib/rag/chroma_db_query_engine/overview",
+                            "docs/api-reference/autogen/agentchat/contrib/rag/chroma_db_query_engine/ChromaDBQueryEngine"
+                          ]
+                        }
                       ]
                     },
                     {
@@ -1254,8 +1253,10 @@
                     "docs/api-reference/autogen/agents/experimental/DocAgent",
                     "docs/api-reference/autogen/agents/experimental/DoclingDocIngestAgent",
                     "docs/api-reference/autogen/agents/experimental/InMemoryQueryEngine",
+                    "docs/api-reference/autogen/agents/experimental/ReasoningAgent",
                     "docs/api-reference/autogen/agents/experimental/SlackAgent",
                     "docs/api-reference/autogen/agents/experimental/TelegramAgent",
+                    "docs/api-reference/autogen/agents/experimental/ThinkNode",
                     "docs/api-reference/autogen/agents/experimental/VectorChromaQueryEngine",
                     "docs/api-reference/autogen/agents/experimental/WebSurferAgent",
                     {
@@ -1478,6 +1479,7 @@
                 "docs/api-reference/autogen/import_utils/optional_import_block",
                 "docs/api-reference/autogen/import_utils/patch_object",
                 "docs/api-reference/autogen/import_utils/require_optional_import",
+                "docs/api-reference/autogen/import_utils/run_for_optional_imports",
                 "docs/api-reference/autogen/import_utils/skip_on_missing_imports"
               ]
             },
